@@ -1,33 +1,87 @@
 # Decisiones de Diseño
 
-### ¿Cómo representan el mundo y los identificadores? (Map o listas, String o newtype, ¿qué invariantes garantiza el tipo y cuáles no?)
+## D1. ¿Cómo representan el mundo y los identificadores? 
+Redactó: Andres.
 
-#### 1. Identificadores: `newtype` vs. `String`
-Los identificadores de salas y objetos se modelan mediante `newtype` envolviendo a `String`:
-- `newtype IdSala = IdSala String`
-- `newtype IdObjeto = IdObjeto String`
-
-**Justificación:**  
-Aunque en su representación subyacente ambos son cadenas de texto, el uso de `newtype` añade una capa de seguridad en tiempo de compilación (*type safety*), imposibilitando confundir o intercambiar accidentalmente el identificador de una sala con el de un objeto (por ejemplo, intentar usar un `IdObjeto` como destino de una salida o un `IdSala` como requisito).
+**Contexto**
+El modelado del mundo y sus identificadores presentaba el inconveniente de que se necesita parsear texto, seguidamente pasar una serie de validaciones sintacticas y semanticas lo que exige conservar numeros de lineas y tolerar datos incompletos o invalidos. Luego, el motor necesita consultas rapidas, evitar estados inconsistentes y prevenir confusiones humanas (intercambio de IDs)
 
 ---
 
-#### 2. Separación en dos fases: Modelo Crudo vs. Modelo Final
-Para gestionar el ciclo de vida de los datos y el manejo de errores, se definieron dos estructuras bien diferenciadas:
-
-1. **Estructuras Crudas (`MundoCrudo`, `SalaCruda`, `ObjetoCrudo`):**
-   - Utilizan **listas** y preservan números de línea (`Int`) en cada campo, manteniendo los datos como `String`.
-   - **Propósito:** Capturan fielmente el contenido del archivo de texto tras el parseo inicial (errores de sintaxis v1). Estas estructuras intermedias permiten realizar las validaciones contextuales posteriores (v2 en adelante) pudiendo reportar la línea exacta de cada error.
-
-2. **Estructuras Finales (`Mundo`, `Sala`, `Objeto`):**
-   - Utilizan **`Data.Map`** para almacenar salas (`Map IdSala Sala`) y objetos (`Map IdObjeto Objeto`), así como para las salidas de cada sala (`Map Direccion Salida`). Los objetos contenidos en salas se representan mediante listas de identificadores (`[IdObjeto]`).
-   - **Propósito:** Representan el estado limpio y validado que utiliza el motor para la ejecución y jugabilidad, optimizando además el acceso a salas y objetos en $O(\log n)$.
+**Opciones**
+* *A:* Usar simples sinónimos de tipos (`type Id = String`), listas en todas las entidades (`[Sala]`, `[Objeto]`, `[(Direccion, String)]`) y una única estructura compartida desde el parseo hasta el juego. Hay un pro claro que es la simplicidad, pero una busqueda mas lenta, overhead de arrastrar datos innecesarios y riesgo de mezclar diferentes ID
+* *B:* Separar la arquitectura en dos representaciones:
+  1. Un modelo crudo (`MundoCrudo`) basado en listas, tuplas y `String` con números de línea para parseo y validación de errores.
+  2. Un modelo final (`Mundo`) basado en `Data.Map` y tipos nominales (`newtype`) para la ejecución.
 
 ---
 
-#### 3. Invariantes
+**Decisión**
+Se adoptó un el diseño en dos etapas (opción 2): un modelo crudo (`MundoCrudo`) basado en listas con números de línea para reportar errores de sintaxis y contexto (v1 y v2+), y un modelo final (`Mundo`) estructurado con `Data.Map` para búsquedas eficientes en ejecución. Los IDs se encapsulan con `newtype` (`IdSala` e `IdObjeto`) para evitar mezclar salas y objetos en tiempo de compilación. Gracias a los tipos y a `Map`, se garantiza por construcción la unicidad de claves, la validez de las direcciones y que no haya salidas duplicadas en una misma dirección.
 
-- **Garantiza el tipo:**
-  - **La no confusion de ID:** No puedes pasar por error un objeto donde iba una sala o viceversa, gracias a los `newtype`.
-  - **Sin duplicados:** El uso de `Map` garantiza que no haya salas u objetos repetidos con el mismo ID, ni dos salidas hacia la misma dirección en una sala.
-  - **Direcciones válidas:** Solo se permiten las direcciones definidas en el tipo.
+---
+
+**Consecuencias:**
+ * *Qué ganamos*: Seguridad en compilación, mensajes de error más precisos, rendimiento mayo en busquedas $O(\log n)$ y estructuras limpias de duplicados
+* *Qué perdimos:* Simplicidad de codigo, hay que mantener dos modelos de datos paralelos, y desarrollar una función de tranformación del mundo crudo al final.
+
+## D2. Qué guarda el Estado y dónde quedan los objetos
+Redactó: Andrés
+
+**Contexto:** el mundo es inmutable durante la partida, pero sí cambian el jugador (sala actual) y los objetos (se toman y se sueltan). Había que decidir qué parte vive en Estado, si se copia el mundo y dónde queda un objeto soltado.
+
+---
+
+**Opciones:**
+- A. Copiar el Mundo completo dentro del estado y modificar las salas.
+  Es más simple de escribir, pero mezcla lo estático con lo dinámico.
+- B. `Map IdSala [IdObjeto]` más una lista aparte para el inventario. Es muy
+  intuitivo, pero la posición de un objeto queda repartida en dos sitios y el código de `ejecutar` debe mantener a mano el invariante.
+- C. `Map IdObjeto Ubicacion`, con `data Ubicacion = EnSala IdSala | EnInventario`.
+
+---
+
+**Decisión:** C. `Estado` guarda `estSala` (dónde está el jugador),
+`estUbicacion` (dónde está cada objeto ahora) y `estMundo`, una referencia al
+mundo inmutable que no se copia ni se modifica.
+
+**Consecuencias:**
+- Ganamos: cada objeto está en exactamente un lugar por construcción, así que
+  no puede aparecer en dos sitios ni en ninguno. 
+- Perdimos: 
+
+
+---
+
+## D3. Cómo se diseñó el reconocedor
+Redactó: Andrés
+
+**Contexto:** el formato del mundo se lee línea por línea y hay que construir los combinadores, dar el número de línea de cada error de sintaxis y reportar varios errores a la vez. Pero `ReadS` solo devuelve una lista de lecturas, sin explicar por qué falla.
+
+---
+
+**Opciones:**
+- A. Usar `ReadS` directamente como alias de tipo. Es lo más corto, pero cada
+  combinador queda con el manejo de listas a la vista y no se puede usar
+  `do`, `<$>` ni `<|>`.
+- B. Un `newtype Reconocedor a` sobre `ReadS` con instancias de `Functor`,
+  `Applicative`, `Monad` y `Alternative`. 
+
+---
+
+**Decisión:** `newtype Reconocedor` sobre `ReadS`; `<|>` con todas las
+lecturas; `munch` para clases de caracteres; primera lectura completa. Se
+reconoce en dos niveles: primero funciones puras sobre las líneas (numerarlas,
+quitar espacios, descartar vacías y comentarios, cortar en bloques) y luego
+combinadores que reconocen el contenido de una sola línea.
+
+---
+
+**Consecuencias:**
+- Ganamos: gramáticas legibles con `do` y `<|>`; la clase de caracteres da un
+  único resultado con `munch`, y `<|>` no pierde lecturas por el orden en que
+  se escriben las alternativas.
+- Cada línea falla de manera independiente, lo que permite seguir y acumular
+  todos los errores de sintaxis (V1).
+- Perdimos: los mensajes de error no dicen en qué columna falló ni qué se
+  esperaba, solo que la línea no se pudo reconocer.

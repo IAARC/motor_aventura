@@ -1,4 +1,4 @@
-module Motor.Tipos where
+module Tipos where
 
 import Data.Map (Map)
 
@@ -79,3 +79,44 @@ data Mundo = Mundo
   , mundoObjetos   :: Map IdObjeto Objeto
   , mundoSalas     :: Map IdSala Sala
   } deriving (Eq, Show)
+
+  -- Estado: solo lo que cambia durante la partida.El Mundo no se copia ni se muta.
+
+data Ubicacion = EnSala IdSala | EnInventario deriving (Eq, Show, Read, Ord)
+data Estado = Estado
+  {   estSala       :: IdSala -- estado actual del jugador
+    , estUbicacion :: Map IdObjeto Ubicacion -- donde esta cada objeto
+    , estMundo      :: Mundo -- referencia al mundo inmutable
+  } deriving (Eq, Show)
+
+ -- mapeo de comandos minimos a la estructura de datos Comando
+data Comando
+  = Ir Direccion
+  | Mirar
+  | Tomar IdObjeto
+  | Soltar IdObjeto
+  | Examinar IdObjeto
+  | Inventario
+  | Guardar FilePath
+  | Cargar FilePath
+  | Ayuda
+  | Salir
+  deriving (Eq, Show)
+
+-- mapeamos las validaciones v1,...,v10 a la estructura de datos ErrorMundo para poder reportarlas al usuario
+data ErrorMundo
+  = ErrSintaxis Int String
+  | ErrIdSalaRepetido Int IdSala   -- V2
+  | ErrIdObjetoRepetido Int IdObjeto  -- V2
+  | ErrSalidaASalaInexistente Int IdSala IdSala Direccion -- V3
+  | ErrRequisitoInexistente Int IdSala IdObjeto  -- V4
+  | ErrDireccionDuplicada Int IdSala Direccion  -- V5
+  | ErrObjetoNoDefinidoEnSala Int IdSala IdObjeto  -- V6
+  | ErrObjetoEnVariasSalas IdObjeto  -- V7 (
+  | ErrInicioInexistente Int IdSala -- V8
+  | ErrMetaSalaInexistente Int IdSala   -- V8
+  | ErrMetaObjetoInexistente Int IdObjeto  -- V8
+  | ErrSalaInalcanzable IdSala   -- V9 
+  | ErrObjetoInconseguible IdObjeto  -- V10 
+  | ErrPesoExcedeCapacidad IdObjeto Int Int  -- variante 1
+  deriving (Eq, Show)
