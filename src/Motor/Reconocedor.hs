@@ -9,9 +9,23 @@ module Motor.Reconocedor
   , espacios
   , lexema
   , reconocerLinea
+    -- * Piezas del formato del mundo
+  , espacios1
+  , esCaracterId
+  , identificador
+  , palabra
+  , entero
+  , direccion
+  , nombreDireccion
+  , lineaClave
+  , salidaCruda
+  , metaCruda
   ) where
  
-import Control.Applicative (Alternative(..))
+import Control.Applicative (Alternative(..), optional)
+import Data.Char (digitToInt, isDigit, isSpace)
+
+import Motor.Tipos (Direccion(..), MetaCruda(..))
  
 -- recibe el texto pendiente y devuelve todas las lecturas posibles, 
 -- cada una con el texto que sobra.
@@ -73,4 +87,79 @@ reconocerLinea :: Reconocedor a -> String -> Maybe a
 reconocerLinea p s = case [ a | (a, "") <- reconocer p s ] of
   (a:_) -> Just a
   []    -> Nothing
- 
+
+-- ---------------------------------------------------------------------------
+-- Piezas del formato del mundo. Cada una reconoce el contenido de una sola
+-- línea (o de un valor); Motor.Mundo se encarga de numerar las líneas y de
+-- cortar el archivo en bloques.
+
+-- Al menos un espacio o tabulador.
+espacios1 :: Reconocedor ()
+espacios1 = () <$ munch1 (`elem` " \t")
+
+-- Letras minúsculas (incluidas á é í ó ú ñ ü), dígitos y guion bajo.
+-- isDigit solo acepta 0-9, a diferencia de isNumber.
+esCaracterId :: Char -> Bool
+esCaracterId c = (c >= 'a' && c <= 'z') || c `elem` "áéíóúñü" || isDigit c || c == '_'
+
+identificador :: Reconocedor String
+identificador = munch1 esCaracterId
+
+-- Cualquier secuencia sin espacios. Se usa para reconocer la forma de SALIDA
+-- y META antes de revisar cada pieza, y así dar un mensaje más preciso
+-- ("dirección inexistente", "identificador inválido") que "mal formada".
+palabra :: Reconocedor String
+palabra = munch1 (not . isSpace)
+
+-- Entero sin signo. Se devuelve como Integer para que el que llama pueda
+-- revisar el rango sin desbordamientos; no se usa read.
+entero :: Reconocedor Integer
+entero = foldl (\acc c -> acc * 10 + toInteger (digitToInt c)) 0 <$> munch1 isDigit
+
+nombreDireccion :: Direccion -> String
+nombreDireccion d = case d of
+  Norte  -> "norte"
+  Sur    -> "sur"
+  Este   -> "este"
+  Oeste  -> "oeste"
+  Arriba -> "arriba"
+  Abajo  -> "abajo"
+
+-- Una alternativa por cada dirección. Ningún nombre es prefijo de otro, así
+-- que como mucho una alternativa consume la entrada completa.
+direccion :: Reconocedor Direccion
+direccion = foldr ((<|>) . opcion) empty [minBound .. maxBound]
+  where
+    opcion d = d <$ cadena (nombreDireccion d)
+
+-- "CLAVE: valor". La clave son mayúsculas ASCII; el valor es el resto de la
+-- línea (puede contener ':' y está vacío si no se escribió nada).
+lineaClave :: Reconocedor (String, String)
+lineaClave = (,) <$> munch1 esMayuscula <* espacios <* caracter ':' <* espacios <*> resto
+  where
+    esMayuscula c = c >= 'A' && c <= 'Z'
+
+-- "<dirección> -> <sala>" o "<dirección> -> <sala> requiere <objeto>".
+-- Devuelve las tres piezas como texto; Motor.Mundo revisa que la dirección
+-- exista y que los identificadores sean válidos.
+-- `optional` produce las dos lecturas (con y sin requisito); reconocerLinea
+-- se queda con la que consume la línea completa.
+salidaCruda :: Reconocedor (String, String, Maybe String)
+salidaCruda = do
+  d <- munch1 (\c -> not (isSpace c) && c /= '-')
+  espacios
+  _ <- cadena "->"
+  espacios
+  destino <- palabra
+  requisito <- optional (espacios1 *> cadena "requiere" *> espacios1 *> palabra)
+  espacios
+  pure (d, destino, requisito)
+
+-- "llegar a <sala>" o "llevar <objeto> a <sala>", con las piezas sin revisar.
+metaCruda :: Reconocedor MetaCruda
+metaCruda = llegar <|> llevar
+  where
+    llegar = LlegarACruda <$> (cadena "llegar" *> espacios1 *> cadena "a" *> espacios1 *> palabra)
+    llevar = LlevarACruda
+      <$> (cadena "llevar" *> espacios1 *> palabra)
+      <*> (espacios1 *> cadena "a" *> espacios1 *> palabra)
