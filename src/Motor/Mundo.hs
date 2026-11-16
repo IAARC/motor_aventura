@@ -8,7 +8,7 @@ module Motor.Mundo
 import Data.Char (isSpace)
 import Data.Either (partitionEithers)
 import Data.Foldable (traverse_)
-import Data.List (dropWhileEnd, intercalate)
+import Data.List (dropWhileEnd, intercalate, sortOn)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -224,9 +224,15 @@ bloqueSala ini cs =
 reconocerMundo :: String -> Either [ErrorMundo] MundoCrudo
 reconocerMundo txt = case bloques (lineasUtiles txt) of
   [] -> Left [ErrSintaxis 1 "el archivo está vacío (faltan MUNDO, INICIO y META)"]
-  (cab : demas) -> aEither (armar <$> cabecera cab <*> traverse bloque demas)
+  (cab : demas) -> either (Left . sortOn lineaDe) Right
+                     (aEither (armar <$> cabecera cab <*> traverse bloque demas))
   where
     armar c bs = let (os, ss) = partitionEithers bs in MundoCrudo c os ss
+    -- Los errores se acumulan por campo; se ordenan para mostrarlos en el
+    -- orden del archivo. sortOn es estable: los de una misma línea quedan
+    -- en el orden en que se encontraron.
+    lineaDe (ErrSintaxis n _) = n
+    lineaDe _                 = 0
 
 -- ---------------------------------------------------------------------------
 -- Validación (V2-V10 y variante de peso)
@@ -308,9 +314,11 @@ validarMundo mc
     vPeso = case snd <$> hcCapacidad cab of
       Nothing  -> []
       Just cap ->
-        [ ErrPesoExcedeCapacidad (ocLinea x) (IdObjeto (ocId x)) p cap
-        | x <- objetos, let p = fromMaybe 1 (ocPeso x), p > cap ]
-        ++ entregaPosible cap
+        let excesos = [ ErrPesoExcedeCapacidad (ocLinea x) (IdObjeto (ocId x)) p cap
+                      | x <- objetos, let p = fromMaybe 1 (ocPeso x), p > cap ]
+        -- Si algún objeto ya no cabe solo, la comprobación conjunta solo
+        -- repetiría ese mismo problema.
+        in if null excesos then entregaPosible cap else excesos
 
     -- Comprobación de "llevar a la vez": para cumplir "llevar o a d" hay que
     -- entrar a d con o en el inventario, y por lo tanto también con el
