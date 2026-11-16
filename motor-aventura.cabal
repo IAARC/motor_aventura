@@ -1,0 +1,41 @@
+cabal-version:      2.4
+name:               motor-aventura
+version:            0.1.0.0
+synopsis:           Motor para juegos de aventura de texto (CI-3661, Proyecto 1)
+build-type:         Simple
+extra-doc-files:    README.md
+
+common comun
+    default-language: GHC2021
+    ghc-options:      -Wall
+
+library
+    import:           comun
+    hs-source-dirs:   src
+    exposed-modules:  Motor.Tipos
+                      Motor.Reconocedor
+                      Motor.Mundo
+                      Motor.Comandos
+                      Motor.Nucleo
+                      Motor.Persistencia
+    build-depends:    base >=4.14 && <5
+                    , containers
+                    , directory
+                    , filepath
+
+executable aventura
+    import:           comun
+    hs-source-dirs:   app
+    main-is:          Main.hs
+    build-depends:    base >=4.14 && <5
+                    , motor-aventura
+
+test-suite pruebas
+    import:           comun
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Spec.hs
+    build-depends:    base >=4.14 && <5
+                    , containers
+                    , HUnit
+                    , motor-aventura

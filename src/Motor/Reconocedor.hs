@@ -1,4 +1,4 @@
-module Reconocedor
+module Motor.Reconocedor
   ( Reconocedor(..)
   , satisfy
   , caracter

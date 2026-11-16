@@ -1,4 +1,4 @@
-module Tipos where
+module Motor.Tipos where
 
 import Data.Map (Map)
 
