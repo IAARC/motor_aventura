@@ -57,7 +57,7 @@ data CabeceraCruda = CabeceraCruda
   { hcTitulo    :: String
   , hcInicio    :: (Int, String)
   , hcMeta      :: (Int, MetaCruda)
-  , hcCapacidad :: (Int, Int)          
+  , hcCapacidad :: Maybe (Int, Int)    -- (línea, n); Nothing = el archivo no trae CAPACIDAD
   } deriving (Eq, Show)
 
 data MundoCrudo = MundoCrudo
@@ -75,7 +75,7 @@ data Mundo = Mundo
   { mundoTitulo    :: String
   , mundoInicio    :: IdSala
   , mundoMeta      :: Meta
-  , mundoCapacidad :: Int
+  , mundoCapacidad :: Maybe Int   -- Nothing = sin límite (p. ej. mundos/entrega.txt no trae CAPACIDAD)
   , mundoObjetos   :: Map IdObjeto Objeto
   , mundoSalas     :: Map IdSala Sala
   } deriving (Eq, Show)
@@ -112,11 +112,12 @@ data ErrorMundo
   | ErrRequisitoInexistente Int IdSala IdObjeto  -- V4
   | ErrDireccionDuplicada Int IdSala Direccion  -- V5
   | ErrObjetoNoDefinidoEnSala Int IdSala IdObjeto  -- V6
-  | ErrObjetoEnVariasSalas IdObjeto  -- V7 (
+  | ErrObjetoEnVariasSalas Int IdObjeto  -- V7 (línea de la colocación repetida)
   | ErrInicioInexistente Int IdSala -- V8
   | ErrMetaSalaInexistente Int IdSala   -- V8
   | ErrMetaObjetoInexistente Int IdObjeto  -- V8
   | ErrSalaInalcanzable IdSala   -- V9 
   | ErrObjetoInconseguible IdObjeto  -- V10 
-  | ErrPesoExcedeCapacidad IdObjeto Int Int  -- variante 1
+  | ErrPesoExcedeCapacidad Int IdObjeto Int Int  -- variante 1: línea, objeto, peso, capacidad
+  | ErrObjetosNoCabenJuntos [IdObjeto] Int Int   -- variante 1: objetos necesarios a la vez, peso total, capacidad
   deriving (Eq, Show)
