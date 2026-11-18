@@ -1,0 +1,27 @@
+# mundos/invalidos/no_caben_juntos.txt
+# Errores esperados (1, solo de la variante de peso):
+#   Para cumplir la META hay que llevar a la vez generador (6) y pase_acceso (3):
+#   pesan 9 en total, más que la CAPACIDAD (8). Cada objeto cabe por separado.
+
+MUNDO: Demasiada carga
+INICIO: entrada
+META: llevar generador a cabina
+CAPACIDAD: 8
+---
+OBJETO: generador
+DESC: Un generador portátil.
+PESO: 6
+---
+OBJETO: pase_acceso
+DESC: Un pase de acceso plastificado.
+PESO: 3
+---
+SALA: entrada
+DESC: Un vestíbulo con una puerta de seguridad al norte.
+SALIDA: norte -> cabina requiere pase_acceso
+OBJETO: generador
+OBJETO: pase_acceso
+---
+SALA: cabina
+DESC: La cabina de control.
+SALIDA: sur -> entrada

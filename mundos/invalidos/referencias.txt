@@ -1,0 +1,49 @@
+# mundos/invalidos/referencias.txt
+# Errores esperados (9):
+#   V2  sala repetida: cocina
+#   V2  objeto repetido: llave
+#   V3  salida a sala inexistente: salon, oeste -> torre
+#   V4  salida que requiere un objeto inexistente: salon, este requiere brujula
+#   V5  dos salidas en la misma dirección: salon, norte
+#   V6  sala con un objeto no definido: dragon en salon
+#   V7  objeto colocado en más de una sala: mapa (salon y biblioteca)
+#   V8  INICIO con una sala inexistente: fantasma
+#   V8  META con una sala inexistente: trono
+
+MUNDO: Referencias rotas
+INICIO: fantasma
+META: llevar mapa a trono
+---
+OBJETO: mapa
+DESC: Un mapa del edificio.
+---
+OBJETO: llave
+DESC: Una llave de bronce.
+---
+OBJETO: antorcha
+DESC: Una antorcha apagada.
+---
+OBJETO: llave
+DESC: Otra llave, con el mismo identificador.
+---
+SALA: salon
+DESC: Un salón enorme y vacío.
+SALIDA: norte -> biblioteca
+SALIDA: norte -> cocina
+SALIDA: este -> cocina requiere brujula
+SALIDA: oeste -> torre
+OBJETO: mapa
+OBJETO: antorcha
+OBJETO: dragon
+---
+SALA: biblioteca
+DESC: Estantes hasta el techo.
+SALIDA: sur -> salon
+OBJETO: mapa
+---
+SALA: cocina
+DESC: Huele a café.
+SALIDA: oeste -> salon
+---
+SALA: cocina
+DESC: Otra cocina con el mismo identificador.

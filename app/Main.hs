@@ -19,7 +19,7 @@ main = do
   configurarConsola
   args <- getArgs
   case args of
-    ["validar", ruta] -> do
+    [opcion, ruta] | opcion `elem` ["validar", "--validar"] -> do
       _ <- cargarMundo ruta
       putStrLn "Mundo válido."
       exitSuccess

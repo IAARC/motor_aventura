@@ -1,0 +1,80 @@
+# Mundo propio — variante 1 (Peso)
+# Hay que subir al entrepiso con la escalera (5), pero la batería (7) no cabe
+# junto a ella con CAPACIDAD 10: hay que soltar la escalera antes de tomarla.
+MUNDO: Apagón en el cuarto de servidores
+INICIO: recepcion
+META: llevar bateria_ups a sala_de_servidores
+CAPACIDAD: 10
+---
+OBJETO: carnet
+DESC: Tu carnet de la universidad. El vigilante solo deja pasar a quien lo muestra.
+PESO: 1
+---
+OBJETO: tarjeta_acceso
+DESC: Una tarjeta magnética con la etiqueta "Servidores — solo personal autorizado".
+PESO: 1
+---
+OBJETO: escalera
+DESC: Una escalera de aluminio, plegable y bastante pesada.
+PESO: 5
+---
+OBJETO: bateria_ups
+DESC: Una batería de respaldo (UPS) del tamaño de un maletín. Pesa una barbaridad.
+PESO: 7
+---
+OBJETO: caja_herramientas
+DESC: Una caja de herramientas de acero llena hasta el borde. Tentadora, pero no la necesitas.
+PESO: 6
+---
+OBJETO: termo_de_cafe
+DESC: Un termo con café tibio. No ayuda a ganar, pero levanta el ánimo.
+PESO: 1
+---
+SALA: recepcion
+DESC: La recepción del edificio, a oscuras por el apagón. Una linterna de emergencia parpadea sobre el mostrador.
+SALIDA: norte -> pasillo
+SALIDA: oeste -> oficina_vigilante requiere carnet
+OBJETO: carnet
+OBJETO: termo_de_cafe
+---
+SALA: oficina_vigilante
+DESC: La oficina del vigilante. Hay monitores apagados y un tablero lleno de llaveros.
+SALIDA: este -> recepcion
+OBJETO: tarjeta_acceso
+---
+SALA: pasillo
+DESC: Un pasillo largo con puertas a ambos lados. Una trampilla en el techo da al entrepiso.
+SALIDA: sur -> recepcion
+SALIDA: oeste -> almacen
+SALIDA: este -> taller
+SALIDA: norte -> laboratorio
+SALIDA: arriba -> entrepiso requiere escalera
+---
+SALA: almacen
+DESC: Un almacén con estantes metálicos y olor a polvo.
+SALIDA: este -> pasillo
+OBJETO: escalera
+---
+SALA: taller
+DESC: Un taller con bancos de trabajo y herramientas colgadas de la pared.
+SALIDA: oeste -> pasillo
+SALIDA: sur -> patio
+OBJETO: caja_herramientas
+---
+SALA: patio
+DESC: Un patio techado donde se acumulan cajas y sillas rotas.
+SALIDA: norte -> taller
+---
+SALA: entrepiso
+DESC: Un entrepiso bajo y estrecho, lleno de cables. Apenas se puede estar de pie.
+SALIDA: abajo -> pasillo
+OBJETO: bateria_ups
+---
+SALA: laboratorio
+DESC: Un laboratorio de computación vacío. Al fondo, una puerta blindada con lector de tarjetas.
+SALIDA: sur -> pasillo
+SALIDA: este -> sala_de_servidores requiere tarjeta_acceso
+---
+SALA: sala_de_servidores
+DESC: La sala de servidores. Los racks esperan en silencio a que alguien les devuelva la luz.
+SALIDA: oeste -> laboratorio

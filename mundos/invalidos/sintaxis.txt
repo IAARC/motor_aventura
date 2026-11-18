@@ -1,0 +1,36 @@
+# mundos/invalidos/sintaxis.txt
+# Errores esperados (8, todos V1: errores de sintaxis):
+#   1. CAPACIDAD repetida
+#   2. META mal formada ("ganar el juego")
+#   3. identificador inválido en OBJETO ("Llave", con mayúscula)
+#   4. PESO que no es un entero positivo (PESO: 0)
+#   5. clave desconocida (COLOR) en un bloque OBJETO
+#   6. línea sin la forma CLAVE: valor
+#   7. dirección inexistente en SALIDA ("noreste")
+#   8. bloque SALA sin el campo DESC
+# Al haber errores V1 no se intenta validar nada más.
+
+MUNDO: Sintaxis rota
+INICIO: cocina
+META: ganar el juego
+CAPACIDAD: 10
+CAPACIDAD: 12
+---
+OBJETO: Llave
+DESC: Una llave oxidada.
+---
+OBJETO: pesa_nada
+DESC: Un objeto que no pesa nada, o eso dice.
+PESO: 0
+---
+OBJETO: cuadro
+DESC: Un cuadro torcido.
+COLOR: rojo
+---
+SALA: cocina
+DESC: Una cocina pequeña.
+esto no tiene la forma pedida
+SALIDA: noreste -> sala
+---
+SALA: sala
+SALIDA: sur -> cocina

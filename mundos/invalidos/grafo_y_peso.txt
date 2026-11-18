@@ -1,0 +1,33 @@
+# mundos/invalidos/grafo_y_peso.txt
+# Errores esperados (3):
+#   V9  sala inalcanzable desde INICIO: isla
+#   V10 objeto necesario que no está en ninguna sala: llave_boveda
+#   Variante (peso): lingote pesa 9, más que la CAPACIDAD (5)
+# (la comprobación de "llevar a la vez" no se reporta: si un objeto ya no cabe
+#  solo, ese es el único error de peso que se informa)
+
+MUNDO: Grafo y peso
+INICIO: entrada
+META: llevar lingote a camara
+CAPACIDAD: 5
+---
+OBJETO: lingote
+DESC: Un lingote de oro macizo.
+PESO: 9
+---
+OBJETO: llave_boveda
+DESC: La llave de la bóveda. Nadie sabe dónde está.
+PESO: 1
+---
+SALA: entrada
+DESC: La entrada de un banco abandonado.
+SALIDA: norte -> camara requiere llave_boveda
+OBJETO: lingote
+---
+SALA: camara
+DESC: La cámara acorazada.
+SALIDA: sur -> entrada
+---
+SALA: isla
+DESC: Una isla a la que no lleva ningún camino.
+SALIDA: este -> entrada
