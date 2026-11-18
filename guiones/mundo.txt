@@ -1,0 +1,18 @@
+mirar
+ir oeste
+tomar carnet
+ir oeste
+tomar tarjeta_acceso
+ir este
+ir norte
+ir oeste
+tomar escalera
+ir este
+ir arriba
+tomar bateria_ups
+soltar escalera
+tomar bateria_ups
+inventario
+ir abajo
+ir norte
+ir este

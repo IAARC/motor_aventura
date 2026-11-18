@@ -1,4 +1,3 @@
-# Mundo propio — variante 1 (Peso)
 # Hay que subir al entrepiso con la escalera (5), pero la batería (7) no cabe
 # junto a ella con CAPACIDAD 10: hay que soltar la escalera antes de tomarla.
 MUNDO: Apagón en el cuarto de servidores

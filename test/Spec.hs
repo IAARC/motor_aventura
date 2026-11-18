@@ -84,22 +84,22 @@ testInvalidoSemanticaProfesor = "invalido_semantica.txt tiene 9 errores" ~: do
 
 testSintaxisPropio :: Test
 testSintaxisPropio = "sintaxis.txt tiene 8 errores V1" ~: do
-  n <- contarErrores "mundos/sintaxis.txt"
+  n <- contarErrores "mundos/invalidos/sintaxis.txt"
   n @?= 8
 
 testReferencias :: Test
 testReferencias = "referencias.txt tiene 9 errores" ~: do
-  n <- contarErrores "mundos/referencias.txt"
+  n <- contarErrores "mundos/invalidos/referencias.txt"
   n @?= 9
 
 testGrafoYPeso :: Test
 testGrafoYPeso = "grafo_y_peso.txt tiene 3 errores" ~: do
-  n <- contarErrores "mundos/grafo_y_peso.txt"
+  n <- contarErrores "mundos/invalidos/grafo_y_peso.txt"
   n @?= 3
 
 testNoCabenJuntos :: Test
 testNoCabenJuntos = "no_caben_juntos.txt tiene 1 error" ~: do
-  n <- contarErrores "mundos/no_caben_juntos.txt"
+  n <- contarErrores "mundos/invalidos/no_caben_juntos.txt"
   n @?= 1
 
 -- =========================================================================
